@@ -30,3 +30,28 @@ def getBackground():
     plt.close()
 
     return popt[0], np.sqrt(pcov[0][0]), np.sqrt(pcov[0][0])/np.sqrt(len(pixels))
+
+def meanArr(arr, bin, appendRest):
+    if bin != int(bin): return arr
+    cnt, avg, std = 0, 0, 0
+    new, stdDev = [], []
+    while True:
+        if cnt != 0: new.append(avg)
+        avg = 0
+        for j in range(bin):
+            if cnt*bin+j < len(arr):
+                avg += arr[int(cnt*bin+j)]/bin
+            else:
+                if appendRest:
+                    temp, avg= 0, 0
+                    for k in range(cnt*bin, cnt*bin+j):
+                        temp+=1
+                        avg += arr[int(k)]
+                    if cnt*bin != cnt*bin+j: new.append(avg/temp)
+                return new
+        cnt+=1
+
+if __name__ == '__main__':
+    x = [1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+    x = meanArr(x, 2, True)
+    print(x)
