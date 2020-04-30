@@ -30,11 +30,11 @@ m = 3727.37940  # MeV
 
 # data is very difficult to deal with.
 # take mean from bins data points
-bins = 2
+bins = 1
 values = meanArr(values, bins, False)
 pixels = meanArr(pixels, bins, False)
-print(values)
-print(pixels)
+#print(values)
+#print(pixels)
 valuesUncert = unumpy.uarray(values-offset, stdDev)
 
 # TODO necessary?
@@ -43,7 +43,7 @@ conversion = ufloat(29.3,1.4)
 
 # integrate for energy in arbitrary units
 e = sum(valuesUncert)*bins
-
+print(stdDev/nominal_value(e))
 # integrate up to one point to get energy(x) in MeV
 # the statictical error of 1 = data[0][i+1] - data[0][i]
 # will be negelcted i.e. two pixels always have the same
@@ -53,7 +53,6 @@ def energy(x, const):
     but the error of this should not propagate because
     it is systematic. so use const = nominal_value(e)"""
     return energyPolDecay - sum(valuesUncert[:int(x)//bins:])*(energyPolDecay/const)*bins
-
 
 # bethe bloch eq
 def betheBloch(E, I, c):
@@ -66,7 +65,7 @@ def betheBloch(E, I, c):
 
 
 # fit data with bethe bloch
-cutMax, cutMin = 5, 5
+cutMax, cutMin = -len(values), 1
 domain = np.array([nominal_value(energy(x, nominal_value(e))) for x in pixels], dtype=float)
 print(domain)
 errorX = np.array([np.array(std_dev(energy(x, nominal_value(e)))) for x in pixels], dtype=float)
@@ -79,15 +78,16 @@ print(popt)
 
 # plot (E, dE/dx)
 scaleX, scaleY = 1, 1
+plt.figure(figsize=(5,1))
 plt.xscale('log')
 plt.yscale('log')
-plt.ylabel(r'$\frac{dE}{dx} \textbf{ in  } \frac{MeV}{px}$')
+plt.ylabel(r'$-\frac{dE}{dx} \textbf{ in  } \frac{MeV}{cm}$')
 plt.xlabel(r'$E \textbf{ in } MeV$')
 valuesUncert = valuesUncert / nominal_value(conversion)  # convert y axis from MeV/px to MeV/cm
-plt.errorbar(scaleX * domain, scaleY * unumpy.nominal_values(valuesUncert*(energyPolDecay/nominal_value(e))), yerr=scaleY * unumpy.std_devs(valuesUncert*(energyPolDecay/nominal_value(e))), xerr=scaleX * errorX, fmt='ro',
-                    linewidth=0.8, capsize=2, capthick=0.6, markersize=0)
+#plt.errorbar(scaleX * domain, scaleY * unumpy.nominal_values(valuesUncert*(energyPolDecay/nominal_value(e))), yerr=scaleY * unumpy.std_devs(valuesUncert*(energyPolDecay/nominal_value(e))), xerr=scaleX * errorX, fmt='ro',
+#                    linewidth=0.8, capsize=2, capthick=0.6, markersize=0)
 plt.plot(eFit, (yFit*(energyPolDecay/nominal_value(e))) / nominal_value(conversion), 'k-', lw=.6)
-plt.show()
+plt.savefig("Graphen\\dEdx_von_E.pdf", dpi=500, bbox_inches='tight')
 
 
 def replaceImageJ():
@@ -95,4 +95,4 @@ def replaceImageJ():
     plt.plot(pixels, unumpy.nominal_values(valuesUncert * (energyPolDecay / nominal_value(e))), 'ro', markersize=1)
     plt.show()
     plt.close()
-replaceImageJ()
+#replaceImageJ()
